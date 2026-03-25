@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="logo">Dashboard</div>
+    <nav>
+      <a href="#" class="nav-item active">개요</a>
+      <a href="#" class="nav-item">매출</a>
+      <a href="#" class="nav-item">사용자</a>
+      <a href="#" class="nav-item">설정</a>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <h1 class="page-title">개요</h1>
+      <span class="date" id="today"></span>
+    </header>
+
+    <!-- KPI 카드 -->
+    <section class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">총 매출</div>
+        <div class="kpi-value">₩ 48,250,000</div>
+        <div class="kpi-delta up">▲ 12.4% 전월 대비</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">신규 사용자</div>
+        <div class="kpi-value">3,842</div>
+        <div class="kpi-delta up">▲ 8.1% 전월 대비</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">주문 건수</div>
+        <div class="kpi-value">1,295</div>
+        <div class="kpi-delta down">▼ 2.3% 전월 대비</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">전환율</div>
+        <div class="kpi-value">4.7%</div>
+        <div class="kpi-delta up">▲ 0.5%p 전월 대비</div>
+      </div>
+    </section>
+
+    <!-- 차트 영역 -->
+    <section class="chart-grid">
+      <div class="chart-card wide">
+        <div class="chart-header">
+          <span class="chart-title">월별 매출 추이</span>
+        </div>
+        <canvas id="lineChart"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <span class="chart-title">카테고리별 매출</span>
+        </div>
+        <canvas id="donutChart"></canvas>
+      </div>
+      <div class="chart-card wide">
+        <div class="chart-header">
+          <span class="chart-title">주간 방문자 수</span>
+        </div>
+        <canvas id="barChart"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <span class="chart-title">채널별 유입</span>
+        </div>
+        <canvas id="horizontalBar"></canvas>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
