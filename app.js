@@ -44,9 +44,10 @@ function fmtNum(v) {
 }
 
 // 데이터 로드 & 렌더
+const bust = '?v=' + Date.now();
 Promise.all([
-  fetch('data/sales_refund.csv').then(r => r.text()),
-  fetch('data/new_dau.csv').then(r => r.text()),
+  fetch('data/sales_refund.csv' + bust).then(r => r.text()),
+  fetch('data/new_dau.csv' + bust).then(r => r.text()),
 ]).then(([salesText, dauText]) => {
   const sales = parseCSV(salesText);
   const dau   = parseCSV(dauText);
