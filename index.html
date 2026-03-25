@@ -3,90 +3,84 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard</title>
+  <title>TMW Dashboard</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <aside class="sidebar">
-    <div class="logo">Dashboard</div>
+    <div class="logo">TMW</div>
     <nav>
       <a href="#" class="nav-item active">개요</a>
       <a href="#" class="nav-item">매출</a>
       <a href="#" class="nav-item">사용자</a>
-      <a href="#" class="nav-item">설정</a>
     </nav>
   </aside>
 
   <main class="main">
     <header class="topbar">
       <h1 class="page-title">개요</h1>
-      <div class="topbar-right">
-        <span class="date" id="today"></span>
-        <label class="upload-btn" for="csvUpload">
-          CSV 업로드
-          <input type="file" id="csvUpload" accept=".csv" hidden />
-        </label>
-        <a class="sample-btn" href="sample.csv" download>샘플 CSV</a>
-      </div>
+      <span class="date" id="today"></span>
     </header>
-
-    <!-- 업로드 상태 -->
-    <div class="upload-info" id="uploadInfo" style="display:none;">
-      <span id="uploadMsg"></span>
-      <button onclick="resetData()">초기화</button>
-    </div>
 
     <!-- KPI 카드 -->
     <section class="kpi-grid">
       <div class="kpi-card">
-        <div class="kpi-label">총 매출</div>
-        <div class="kpi-value">₩ 48,250,000</div>
-        <div class="kpi-delta up">▲ 12.4% 전월 대비</div>
+        <div class="kpi-label">총 순매출 (Net)</div>
+        <div class="kpi-value" id="kpi-revenue">—</div>
+        <div class="kpi-sub" id="kpi-revenue-sub"></div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">신규 사용자</div>
-        <div class="kpi-value">3,842</div>
-        <div class="kpi-delta up">▲ 8.1% 전월 대비</div>
+        <div class="kpi-label">총 판매량</div>
+        <div class="kpi-value" id="kpi-sales">—</div>
+        <div class="kpi-sub" id="kpi-sales-sub"></div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">주문 건수</div>
-        <div class="kpi-value">1,295</div>
-        <div class="kpi-delta down">▼ 2.3% 전월 대비</div>
+        <div class="kpi-label">평균 DAU</div>
+        <div class="kpi-value" id="kpi-dau">—</div>
+        <div class="kpi-sub" id="kpi-dau-sub"></div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">전환율</div>
-        <div class="kpi-value">4.7%</div>
-        <div class="kpi-delta up">▲ 0.5%p 전월 대비</div>
+        <div class="kpi-label">평균 환불률</div>
+        <div class="kpi-value" id="kpi-refund">—</div>
+        <div class="kpi-sub" id="kpi-refund-sub"></div>
       </div>
     </section>
 
     <!-- 차트 영역 -->
     <section class="chart-grid">
-      <div class="chart-card wide">
+
+      <div class="chart-card span-2">
         <div class="chart-header">
-          <span class="chart-title">월별 매출 추이</span>
+          <span class="chart-title">일별 매출 추이</span>
+          <span class="chart-sub">Gross vs Net Revenue</span>
         </div>
-        <canvas id="lineChart"></canvas>
+        <canvas id="revenueChart"></canvas>
       </div>
+
+      <div class="chart-card span-2">
+        <div class="chart-header">
+          <span class="chart-title">신규 유저 (RNU) & DAU</span>
+          <span class="chart-sub">일별 추이</span>
+        </div>
+        <canvas id="userChart"></canvas>
+      </div>
+
       <div class="chart-card">
         <div class="chart-header">
-          <span class="chart-title">카테고리별 매출</span>
+          <span class="chart-title">일별 판매량 & 환불</span>
         </div>
-        <canvas id="donutChart"></canvas>
+        <canvas id="salesRefundChart"></canvas>
       </div>
-      <div class="chart-card wide">
-        <div class="chart-header">
-          <span class="chart-title">주간 방문자 수</span>
-        </div>
-        <canvas id="barChart"></canvas>
-      </div>
+
       <div class="chart-card">
         <div class="chart-header">
-          <span class="chart-title">채널별 유입</span>
+          <span class="chart-title">환불률 추이</span>
+          <span class="chart-sub">%</span>
         </div>
-        <canvas id="horizontalBar"></canvas>
+        <canvas id="refundRateChart"></canvas>
       </div>
+
     </section>
   </main>
 

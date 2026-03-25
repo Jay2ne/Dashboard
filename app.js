@@ -3,190 +3,207 @@ document.getElementById('today').textContent = new Date().toLocaleDateString('ko
   year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
 });
 
-// ── CSV 업로드 ────────────────────────────────────────
-document.getElementById('csvUpload').addEventListener('change', function(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(ev) {
-    try {
-      parseCSV(ev.target.result, file.name);
-    } catch(err) {
-      alert('CSV 파싱 오류: ' + err.message);
-    }
-  };
-  reader.readAsText(ev.target.files[0], 'UTF-8');
-  e.target.value = '';
-});
+// 색상
+const C = {
+  purple:     '#6366f1',
+  purpleFill: 'rgba(99,102,241,0.15)',
+  cyan:       '#22d3ee',
+  cyanFill:   'rgba(34,211,238,0.12)',
+  green:      '#34d399',
+  greenFill:  'rgba(52,211,153,0.15)',
+  orange:     '#fb923c',
+  orangeFill: 'rgba(251,146,60,0.15)',
+  grid:       'rgba(255,255,255,0.06)',
+  tick:       '#64748b',
+};
 
-function parseCSV(text, filename) {
-  const lines = text.trim().split('\n').map(l => l.trim()).filter(l => l);
-  if (lines.length < 2) throw new Error('데이터가 부족합니다.');
-
-  const headers = lines[0].split(',').map(h => h.trim());
-  const rows = lines.slice(1).map(line => line.split(',').map(c => c.trim()));
-
-  const labels = rows.map(r => r[0]);
-  const datasets = [];
-  const COLORS = [ACCENT, ACCENT2, GREEN, ORANGE, PINK, YELLOW];
-
-  for (let i = 1; i < headers.length; i++) {
-    datasets.push({
-      label: headers[i],
-      data: rows.map(r => parseFloat(r[i]) || 0),
-      borderColor: COLORS[(i-1) % COLORS.length],
-      backgroundColor: COLORS[(i-1) % COLORS.length].replace(')', ', 0.15)').replace('rgb', 'rgba') || COLORS[(i-1) % COLORS.length],
-      fill: true,
-      tension: 0.4,
-      pointRadius: 4,
-      pointHoverRadius: 6,
-    });
-  }
-
-  lineChart.data.labels = labels;
-  lineChart.data.datasets = datasets;
-  lineChart.update();
-
-  const info = document.getElementById('uploadInfo');
-  info.style.display = 'flex';
-  document.getElementById('uploadMsg').textContent =
-    `"${filename}" 로드 완료 — ${labels.length}개 항목, ${datasets.length}개 시리즈`;
-}
-
-function resetData() {
-  lineChart.data.labels = defaultLineData.labels;
-  lineChart.data.datasets = defaultLineData.datasets;
-  lineChart.update();
-  document.getElementById('uploadInfo').style.display = 'none';
-}
-
-// 기본 데이터 저장 (초기화용)
-let defaultLineData;
-
-const ACCENT   = '#6366f1';
-const ACCENT2  = '#22d3ee';
-const GREEN    = '#34d399';
-const ORANGE   = '#fb923c';
-const PINK     = '#f472b6';
-const YELLOW   = '#facc15';
-const GRID     = 'rgba(255,255,255,0.06)';
-const TICK     = '#64748b';
-
-Chart.defaults.color = TICK;
-Chart.defaults.borderColor = GRID;
+Chart.defaults.color = C.tick;
+Chart.defaults.borderColor = C.grid;
 Chart.defaults.font.family = "'Segoe UI', system-ui, sans-serif";
 
-// ── 월별 매출 추이 (라인) ──────────────────────────────
-const lineChart = new Chart(document.getElementById('lineChart'), {
-  type: 'line',
-  data: {
-    labels: ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],
-    datasets: [
-      {
-        label: '2026년',
-        data: [28, 32, 27, 35, 38, 41, 36, 43, 39, 45, 48, 52],
-        borderColor: ACCENT,
-        backgroundColor: 'rgba(99,102,241,0.15)',
-        fill: true,
-        tension: 0.4,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-      },
-      {
-        label: '2025년',
-        data: [22, 25, 23, 28, 30, 33, 31, 35, 32, 38, 40, 43],
-        borderColor: ACCENT2,
-        backgroundColor: 'rgba(34,211,238,0.08)',
-        fill: true,
-        tension: 0.4,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        borderDash: [5, 4],
+// CSV 파서
+function parseCSV(text) {
+  const lines = text.trim().split('\n').map(l => l.trim()).filter(l => l);
+  const headers = lines[0].split(',').map(h => h.trim());
+  return lines.slice(1).map(line => {
+    const vals = line.split(',').map(v => v.trim());
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = vals[i]);
+    return obj;
+  });
+}
+
+// 숫자 포맷
+function fmtMoney(v) {
+  if (v >= 1000000) return '₩' + (v / 1000000).toFixed(1) + 'M';
+  if (v >= 1000)    return '₩' + (v / 1000).toFixed(1) + 'K';
+  return '₩' + v.toFixed(0);
+}
+function fmtNum(v) {
+  return Number(v).toLocaleString('ko-KR');
+}
+
+// 데이터 로드 & 렌더
+Promise.all([
+  fetch('data/sales_refund.csv').then(r => r.text()),
+  fetch('data/new_dau.csv').then(r => r.text()),
+]).then(([salesText, dauText]) => {
+  const sales = parseCSV(salesText);
+  const dau   = parseCSV(dauText);
+  renderKPI(sales, dau);
+  renderRevenueChart(sales);
+  renderUserChart(dau);
+  renderSalesRefundChart(sales);
+  renderRefundRateChart(sales);
+});
+
+// ── KPI ───────────────────────────────────────────────
+function renderKPI(sales, dau) {
+  const totalNet   = sales.reduce((s, r) => s + parseFloat(r.Rev_Net || 0), 0);
+  const totalGross = sales.reduce((s, r) => s + parseFloat(r.Total_Rev_gross || 0), 0);
+  const totalSales = sales.reduce((s, r) => s + parseInt(r.판매량 || 0), 0);
+  const totalRefund= sales.reduce((s, r) => s + parseInt(r.환불 || 0), 0);
+  const avgDAU     = dau.reduce((s, r) => s + parseInt(r.DAU || 0), 0) / dau.length;
+  const avgRefRate = sales.reduce((s, r) => s + parseFloat(r.환불률 || 0), 0) / sales.length;
+
+  document.getElementById('kpi-revenue').textContent = fmtMoney(totalNet);
+  document.getElementById('kpi-revenue-sub').textContent = `Gross ${fmtMoney(totalGross)}`;
+
+  document.getElementById('kpi-sales').textContent = fmtNum(totalSales);
+  document.getElementById('kpi-sales-sub').textContent = `환불 ${fmtNum(totalRefund)}건`;
+
+  document.getElementById('kpi-dau').textContent = fmtNum(Math.round(avgDAU));
+  document.getElementById('kpi-dau-sub').textContent = `최고 ${fmtNum(Math.max(...dau.map(r => parseInt(r.DAU))))}`;
+
+  document.getElementById('kpi-refund').textContent = avgRefRate.toFixed(1) + '%';
+  document.getElementById('kpi-refund-sub').textContent =
+    `최고 ${Math.max(...sales.map(r => parseFloat(r.환불률))).toFixed(1)}%`;
+}
+
+// ── 일별 매출 추이 ─────────────────────────────────────
+function renderRevenueChart(sales) {
+  new Chart(document.getElementById('revenueChart'), {
+    type: 'line',
+    data: {
+      labels: sales.map(r => r.Date),
+      datasets: [
+        {
+          label: 'Gross Revenue',
+          data: sales.map(r => parseFloat(r.Total_Rev_gross)),
+          borderColor: C.purple,
+          backgroundColor: C.purpleFill,
+          fill: true, tension: 0.3, pointRadius: 2, pointHoverRadius: 5,
+        },
+        {
+          label: 'Net Revenue',
+          data: sales.map(r => parseFloat(r.Rev_Net)),
+          borderColor: C.cyan,
+          backgroundColor: C.cyanFill,
+          fill: true, tension: 0.3, pointRadius: 2, pointHoverRadius: 5,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { position: 'top', labels: { boxWidth: 12, padding: 16 } } },
+      scales: {
+        x: { grid: { color: C.grid }, ticks: { maxTicksLimit: 12, maxRotation: 0 } },
+        y: { grid: { color: C.grid }, ticks: { callback: v => fmtMoney(v) } }
       }
-    ]
-  },
-  options: {
-    responsive: true,
-    plugins: { legend: { position: 'top', labels: { boxWidth: 12, padding: 16 } } },
-    scales: {
-      y: { grid: { color: GRID }, ticks: { callback: v => '₩' + v + 'M' } },
-      x: { grid: { color: GRID } }
     }
-  }
-});
+  });
+}
 
-defaultLineData = JSON.parse(JSON.stringify(lineChart.data));
-
-// ── 카테고리별 매출 (도넛) ────────────────────────────
-new Chart(document.getElementById('donutChart'), {
-  type: 'doughnut',
-  data: {
-    labels: ['전자기기', '패션', '식품', '뷰티', '기타'],
-    datasets: [{
-      data: [35, 25, 18, 14, 8],
-      backgroundColor: [ACCENT, ACCENT2, GREEN, ORANGE, PINK],
-      borderWidth: 0,
-      hoverOffset: 8,
-    }]
-  },
-  options: {
-    responsive: true,
-    cutout: '68%',
-    plugins: {
-      legend: { position: 'bottom', labels: { boxWidth: 12, padding: 14 } },
-      tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed}%` } }
-    }
-  }
-});
-
-// ── 주간 방문자 수 (바) ───────────────────────────────
-new Chart(document.getElementById('barChart'), {
-  type: 'bar',
-  data: {
-    labels: ['월','화','수','목','금','토','일'],
-    datasets: [
-      {
-        label: '이번 주',
-        data: [1200, 1540, 1320, 1780, 1650, 980, 870],
-        backgroundColor: ACCENT,
-        borderRadius: 6,
-      },
-      {
-        label: '지난 주',
-        data: [1050, 1380, 1100, 1500, 1420, 850, 760],
-        backgroundColor: 'rgba(99,102,241,0.3)',
-        borderRadius: 6,
+// ── RNU & DAU 추이 ─────────────────────────────────────
+function renderUserChart(dau) {
+  new Chart(document.getElementById('userChart'), {
+    type: 'line',
+    data: {
+      labels: dau.map(r => r.Date),
+      datasets: [
+        {
+          label: 'DAU',
+          data: dau.map(r => parseInt(r.DAU)),
+          borderColor: C.green,
+          backgroundColor: C.greenFill,
+          fill: true, tension: 0.3, pointRadius: 2, pointHoverRadius: 5,
+        },
+        {
+          label: 'RNU (신규)',
+          data: dau.map(r => parseInt(r.RNU)),
+          borderColor: C.orange,
+          backgroundColor: C.orangeFill,
+          fill: true, tension: 0.3, pointRadius: 2, pointHoverRadius: 5,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { position: 'top', labels: { boxWidth: 12, padding: 16 } } },
+      scales: {
+        x: { grid: { color: C.grid }, ticks: { maxTicksLimit: 12, maxRotation: 0 } },
+        y: { grid: { color: C.grid }, ticks: { callback: v => fmtNum(v) } }
       }
-    ]
-  },
-  options: {
-    responsive: true,
-    plugins: { legend: { position: 'top', labels: { boxWidth: 12, padding: 16 } } },
-    scales: {
-      y: { grid: { color: GRID }, ticks: { callback: v => v.toLocaleString() } },
-      x: { grid: { color: 'transparent' } }
     }
-  }
-});
+  });
+}
 
-// ── 채널별 유입 (수평 바) ─────────────────────────────
-new Chart(document.getElementById('horizontalBar'), {
-  type: 'bar',
-  data: {
-    labels: ['자연 검색', 'SNS', '직접 방문', '이메일', '광고'],
-    datasets: [{
-      data: [42, 28, 15, 9, 6],
-      backgroundColor: [ACCENT, ACCENT2, GREEN, YELLOW, ORANGE],
-      borderRadius: 6,
-    }]
-  },
-  options: {
-    indexAxis: 'y',
-    responsive: true,
-    plugins: { legend: { display: false } },
-    scales: {
-      x: { grid: { color: GRID }, ticks: { callback: v => v + '%' } },
-      y: { grid: { color: 'transparent' } }
+// ── 판매량 & 환불 바 차트 ──────────────────────────────
+function renderSalesRefundChart(sales) {
+  new Chart(document.getElementById('salesRefundChart'), {
+    type: 'bar',
+    data: {
+      labels: sales.map(r => r.Date),
+      datasets: [
+        {
+          label: '판매량',
+          data: sales.map(r => parseInt(r.판매량)),
+          backgroundColor: C.purple,
+          borderRadius: 3,
+        },
+        {
+          label: '환불',
+          data: sales.map(r => parseInt(r.환불)),
+          backgroundColor: 'rgba(248,113,113,0.7)',
+          borderRadius: 3,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { position: 'top', labels: { boxWidth: 12, padding: 16 } } },
+      scales: {
+        x: { grid: { color: 'transparent' }, ticks: { maxTicksLimit: 10, maxRotation: 0 } },
+        y: { grid: { color: C.grid }, ticks: { callback: v => fmtNum(v) } }
+      }
     }
-  }
-});
+  });
+}
+
+// ── 환불률 추이 ────────────────────────────────────────
+function renderRefundRateChart(sales) {
+  new Chart(document.getElementById('refundRateChart'), {
+    type: 'line',
+    data: {
+      labels: sales.map(r => r.Date),
+      datasets: [{
+        label: '환불률',
+        data: sales.map(r => parseFloat(r.환불률)),
+        borderColor: '#f87171',
+        backgroundColor: 'rgba(248,113,113,0.12)',
+        fill: true, tension: 0.3, pointRadius: 2, pointHoverRadius: 5,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: C.grid }, ticks: { maxTicksLimit: 10, maxRotation: 0 } },
+        y: { grid: { color: C.grid }, ticks: { callback: v => v + '%' } }
+      }
+    }
+  });
+}

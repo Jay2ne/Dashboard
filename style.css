@@ -6,6 +6,8 @@
   --border: #2a2d3a;
   --accent: #6366f1;
   --accent2: #22d3ee;
+  --green: #34d399;
+  --orange: #fb923c;
   --text: #e2e8f0;
   --muted: #64748b;
   --up: #34d399;
@@ -22,7 +24,7 @@ body {
 
 /* Sidebar */
 .sidebar {
-  width: 220px;
+  width: 200px;
   background: var(--surface);
   border-right: 1px solid var(--border);
   display: flex;
@@ -33,9 +35,9 @@ body {
 }
 
 .logo {
-  font-size: 1.3rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
   color: var(--accent);
   margin-bottom: 40px;
 }
@@ -47,19 +49,17 @@ nav { display: flex; flex-direction: column; gap: 6px; }
   color: var(--muted);
   padding: 10px 14px;
   border-radius: 8px;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   transition: all 0.2s;
 }
-
 .nav-item:hover { background: var(--border); color: var(--text); }
 .nav-item.active { background: var(--accent); color: #fff; font-weight: 600; }
 
 /* Main */
 .main {
-  margin-left: 220px;
+  margin-left: 200px;
   flex: 1;
   padding: 32px;
-  max-width: 1400px;
 }
 
 .topbar {
@@ -70,52 +70,14 @@ nav { display: flex; flex-direction: column; gap: 6px; }
 }
 
 .page-title { font-size: 1.5rem; font-weight: 700; }
-.topbar-right { display: flex; align-items: center; gap: 12px; }
 .date { color: var(--muted); font-size: 0.875rem; }
-
-.upload-btn, .sample-btn {
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  text-decoration: none;
-  transition: opacity 0.2s;
-}
-.upload-btn { background: var(--accent); color: #fff; }
-.sample-btn { background: var(--border); color: var(--text); }
-.upload-btn:hover, .sample-btn:hover { opacity: 0.8; }
-
-.upload-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: rgba(99,102,241,0.1);
-  border: 1px solid var(--accent);
-  border-radius: 8px;
-  padding: 10px 16px;
-  margin-bottom: 20px;
-  font-size: 0.875rem;
-  color: var(--accent);
-}
-.upload-info button {
-  margin-left: auto;
-  background: transparent;
-  border: 1px solid var(--accent);
-  color: var(--accent);
-  border-radius: 6px;
-  padding: 4px 12px;
-  cursor: pointer;
-  font-size: 0.8rem;
-}
-.upload-info button:hover { background: var(--accent); color: #fff; }
 
 /* KPI */
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .kpi-card {
@@ -125,16 +87,25 @@ nav { display: flex; flex-direction: column; gap: 6px; }
   padding: 22px 24px;
 }
 
-.kpi-label { font-size: 0.8rem; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
-.kpi-value { font-size: 1.6rem; font-weight: 700; margin-bottom: 6px; }
-.kpi-delta { font-size: 0.8rem; }
-.kpi-delta.up { color: var(--up); }
-.kpi-delta.down { color: var(--down); }
+.kpi-label {
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+}
+.kpi-value {
+  font-size: 1.7rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+  line-height: 1.1;
+}
+.kpi-sub { font-size: 0.78rem; color: var(--muted); }
 
 /* Charts */
 .chart-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 16px;
 }
 
@@ -145,20 +116,28 @@ nav { display: flex; flex-direction: column; gap: 6px; }
   padding: 22px 24px;
 }
 
-.chart-card.wide { grid-column: span 1; }
+.chart-card.span-2 { grid-column: span 2; }
 
-.chart-header { margin-bottom: 18px; }
-.chart-title { font-size: 0.95rem; font-weight: 600; color: var(--text); }
+.chart-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.chart-title { font-size: 0.95rem; font-weight: 600; }
+.chart-sub { font-size: 0.78rem; color: var(--muted); }
 
 canvas { width: 100% !important; }
 
 @media (max-width: 1100px) {
   .kpi-grid { grid-template-columns: repeat(2, 1fr); }
-  .chart-grid { grid-template-columns: 1fr; }
+  .chart-card.span-2 { grid-column: span 2; }
 }
 
-@media (max-width: 700px) {
+@media (max-width: 720px) {
   .sidebar { display: none; }
   .main { margin-left: 0; padding: 20px; }
   .kpi-grid { grid-template-columns: 1fr 1fr; }
+  .chart-grid { grid-template-columns: 1fr; }
+  .chart-card.span-2 { grid-column: span 1; }
 }
