@@ -131,8 +131,8 @@ function renderUserChart(dau) {
           fill: true, tension: 0.3, pointRadius: 2, pointHoverRadius: 5,
         },
         {
-          label: 'RNU (신규)',
-          data: dau.map(r => parseInt(r.RNU)),
+          label: 'NRU (신규)',
+          data: dau.map(r => parseInt(r.NRU)),
           borderColor: C.orange,
           backgroundColor: C.orangeFill,
           fill: true, tension: 0.3, pointRadius: 2, pointHoverRadius: 5,
