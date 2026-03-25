@@ -21,8 +21,21 @@
   <main class="main">
     <header class="topbar">
       <h1 class="page-title">개요</h1>
-      <span class="date" id="today"></span>
+      <div class="topbar-right">
+        <span class="date" id="today"></span>
+        <label class="upload-btn" for="csvUpload">
+          CSV 업로드
+          <input type="file" id="csvUpload" accept=".csv" hidden />
+        </label>
+        <a class="sample-btn" href="sample.csv" download>샘플 CSV</a>
+      </div>
     </header>
+
+    <!-- 업로드 상태 -->
+    <div class="upload-info" id="uploadInfo" style="display:none;">
+      <span id="uploadMsg"></span>
+      <button onclick="resetData()">초기화</button>
+    </div>
 
     <!-- KPI 카드 -->
     <section class="kpi-grid">

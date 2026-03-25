@@ -70,7 +70,45 @@ nav { display: flex; flex-direction: column; gap: 6px; }
 }
 
 .page-title { font-size: 1.5rem; font-weight: 700; }
+.topbar-right { display: flex; align-items: center; gap: 12px; }
 .date { color: var(--muted); font-size: 0.875rem; }
+
+.upload-btn, .sample-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+.upload-btn { background: var(--accent); color: #fff; }
+.sample-btn { background: var(--border); color: var(--text); }
+.upload-btn:hover, .sample-btn:hover { opacity: 0.8; }
+
+.upload-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(99,102,241,0.1);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  padding: 10px 16px;
+  margin-bottom: 20px;
+  font-size: 0.875rem;
+  color: var(--accent);
+}
+.upload-info button {
+  margin-left: auto;
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  border-radius: 6px;
+  padding: 4px 12px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+.upload-info button:hover { background: var(--accent); color: #fff; }
 
 /* KPI */
 .kpi-grid {

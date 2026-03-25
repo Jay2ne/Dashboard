@@ -3,6 +3,66 @@ document.getElementById('today').textContent = new Date().toLocaleDateString('ko
   year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
 });
 
+// ── CSV 업로드 ────────────────────────────────────────
+document.getElementById('csvUpload').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      parseCSV(ev.target.result, file.name);
+    } catch(err) {
+      alert('CSV 파싱 오류: ' + err.message);
+    }
+  };
+  reader.readAsText(ev.target.files[0], 'UTF-8');
+  e.target.value = '';
+});
+
+function parseCSV(text, filename) {
+  const lines = text.trim().split('\n').map(l => l.trim()).filter(l => l);
+  if (lines.length < 2) throw new Error('데이터가 부족합니다.');
+
+  const headers = lines[0].split(',').map(h => h.trim());
+  const rows = lines.slice(1).map(line => line.split(',').map(c => c.trim()));
+
+  const labels = rows.map(r => r[0]);
+  const datasets = [];
+  const COLORS = [ACCENT, ACCENT2, GREEN, ORANGE, PINK, YELLOW];
+
+  for (let i = 1; i < headers.length; i++) {
+    datasets.push({
+      label: headers[i],
+      data: rows.map(r => parseFloat(r[i]) || 0),
+      borderColor: COLORS[(i-1) % COLORS.length],
+      backgroundColor: COLORS[(i-1) % COLORS.length].replace(')', ', 0.15)').replace('rgb', 'rgba') || COLORS[(i-1) % COLORS.length],
+      fill: true,
+      tension: 0.4,
+      pointRadius: 4,
+      pointHoverRadius: 6,
+    });
+  }
+
+  lineChart.data.labels = labels;
+  lineChart.data.datasets = datasets;
+  lineChart.update();
+
+  const info = document.getElementById('uploadInfo');
+  info.style.display = 'flex';
+  document.getElementById('uploadMsg').textContent =
+    `"${filename}" 로드 완료 — ${labels.length}개 항목, ${datasets.length}개 시리즈`;
+}
+
+function resetData() {
+  lineChart.data.labels = defaultLineData.labels;
+  lineChart.data.datasets = defaultLineData.datasets;
+  lineChart.update();
+  document.getElementById('uploadInfo').style.display = 'none';
+}
+
+// 기본 데이터 저장 (초기화용)
+let defaultLineData;
+
 const ACCENT   = '#6366f1';
 const ACCENT2  = '#22d3ee';
 const GREEN    = '#34d399';
@@ -17,7 +77,7 @@ Chart.defaults.borderColor = GRID;
 Chart.defaults.font.family = "'Segoe UI', system-ui, sans-serif";
 
 // ── 월별 매출 추이 (라인) ──────────────────────────────
-new Chart(document.getElementById('lineChart'), {
+const lineChart = new Chart(document.getElementById('lineChart'), {
   type: 'line',
   data: {
     labels: ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],
@@ -54,6 +114,8 @@ new Chart(document.getElementById('lineChart'), {
     }
   }
 });
+
+defaultLineData = JSON.parse(JSON.stringify(lineChart.data));
 
 // ── 카테고리별 매출 (도넛) ────────────────────────────
 new Chart(document.getElementById('donutChart'), {
